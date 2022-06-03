@@ -126,7 +126,7 @@ $ docker-compose --file docker-compose.dev.yml --project-name microservices-prod
 
 If successful, you can browse to the start page of the new React App, which will look like below:
 
-![React App Screen Shot](react_app_screen_shot.png)
+![react_app_screen_shot](https://user-images.githubusercontent.com/1499433/171808504-6d075a07-cce1-48f7-b93e-077cad27ca8b.png)
 
 http://localhost:80 (you can leave the port number out, as 80 is the default)
 
