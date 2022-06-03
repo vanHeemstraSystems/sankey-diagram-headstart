@@ -1,0 +1,73 @@
+version: "3.7"
+
+# See https://stackoverflow.com/questions/29261811/use-docker-compose-env-variable-in-dockerbuild-file
+services:
+
+  webui:
+    build:
+      context: ./webui
+      dockerfile: Dockerfile.dev
+      args: # from env_file
+        IMAGE_REPOSITORY: ${IMAGE_REPOSITORY}
+        PROXY_USER: ${PROXY_USER}
+        PROXY_PASSWORD: ${PROXY_PASSWORD}
+        PROXY_FQDN: ${PROXY_FQDN}
+        PROXY_PORT: ${PROXY_PORT}
+    env_file:
+      - .env
+    container_name: ${UNIQUE_NAMESPACE}-webui-dev
+    privileged: true    
+    security_opt:
+      - no-new-privileges:true      
+    ports:
+      - "8081:3000"
+    volumes:
+      - ./webui:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPULLING=true
+    networks:
+      - gateway-dev      
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile.dev
+      args: # from env_file
+        IMAGE_REPOSITORY: ${IMAGE_REPOSITORY}
+        PROXY_USER: ${PROXY_USER}
+        PROXY_PASSWORD: ${PROXY_PASSWORD}
+        PROXY_FQDN: ${PROXY_FQDN}
+        PROXY_PORT: ${PROXY_PORT}
+    env_file:
+      - .env
+    container_name: ${UNIQUE_NAMESPACE}-gateway-dev
+    depends_on:
+      - webui    
+    privileged: true    
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped     
+    ports:
+      - "8080:80"
+    volumes:
+      - ./gateway:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPULLING=true
+    networks:
+      - default
+      - gateway-dev
+    external_links:
+      - microservices-webui-dev
+      - business-process-management-bpm-dev
+      - business-process-management-modeler-dev
+      - chat-dev
+      - content-management-systems-dev
+      - infrastructure-management-dev
+
+# see https://stackoverflow.com/questions/45255066/create-networks-automatically-in-docker-compose
+networks:
+  gateway-dev:
+    external: true
+    name: gateway-dev
