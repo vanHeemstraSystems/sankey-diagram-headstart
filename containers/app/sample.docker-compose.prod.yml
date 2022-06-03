@@ -1,0 +1,62 @@
+version: "3.7"
+
+# See https://stackoverflow.com/questions/29261811/use-docker-compose-env-variable-in-dockerbuild-file
+services:
+  webui:
+    build:
+      context: ./webui
+      dockerfile: Dockerfile.prod
+      args: # from env_file
+        IMAGE_REPOSITORY: ${IMAGE_REPOSITORY}
+        PROXY_USER: ${PROXY_USER}
+        PROXY_PASSWORD: ${PROXY_PASSWORD}
+        PROXY_FQDN: ${PROXY_FQDN}
+        PROXY_PORT: ${PROXY_PORT}
+    env_file:
+      - .env      
+    container_name: ${UNIQUE_NAMESPACE}-webui-prod
+    privileged: true    
+    security_opt:
+      - no-new-privileges:true      
+    ports:
+      - "9094:80"
+    networks:
+      - gateway-prod      
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile.prod
+      args: # from env_file
+        IMAGE_REPOSITORY: ${IMAGE_REPOSITORY}
+        PROXY_USER: ${PROXY_USER}
+        PROXY_PASSWORD: ${PROXY_PASSWORD}
+        PROXY_FQDN: ${PROXY_FQDN}
+        PROXY_PORT: ${PROXY_PORT}
+    env_file:
+      - .env      
+    container_name: ${UNIQUE_NAMESPACE}-gateway-prod
+    depends_on:
+      - webui    
+    privileged: true    
+    security_opt:
+      - no-new-privileges:true      
+    restart: unless-stopped
+    ports:
+      - "80:80"  
+    networks:
+      - default
+      - gateway-prod
+    external_links:
+      - microservices-webui-prod
+      - business-process-management-bpm-prod
+      - business-process-management-modeler-prod
+      - chat-prod
+      - content-management-systems-prod
+      - infrastructure-management-prod
+
+# see https://stackoverflow.com/questions/45255066/create-networks-automatically-in-docker-compose
+networks:
+  gateway-prod:
+    external: true
+    name: gateway-prod    
